@@ -17,6 +17,10 @@ def choose(paragraphs, select, k):
     """
     # BEGIN PROBLEM 1
     "*** YOUR CODE HERE ***"
+    lst = [paragraph for paragraph in paragraphs if select(paragraph)]
+    if len(lst) <= k:
+        return ''
+    return lst[k]
     # END PROBLEM 1
 
 
@@ -33,6 +37,13 @@ def about(topic):
     assert all([lower(x) == x for x in topic]), 'topics should be lowercase.'
     # BEGIN PROBLEM 2
     "*** YOUR CODE HERE ***"
+    def check(sentence):
+        lst = split(remove_punctuation(lower(sentence)))
+        for word in topic:
+            if word in lst:
+                return True
+        return False
+    return check
     # END PROBLEM 2
 
 
@@ -57,6 +68,14 @@ def accuracy(typed, reference):
     reference_words = split(reference)
     # BEGIN PROBLEM 3
     "*** YOUR CODE HERE ***"
+    whole = len(typed_words)
+    correct = 0
+    for ID in range(0, min(whole, len(reference_words))):
+        if typed_words[ID] == reference_words[ID]:
+            correct += 1
+    if whole == 0:
+        return 0.0
+    return 100 * correct / whole
     # END PROBLEM 3
 
 
@@ -65,6 +84,7 @@ def wpm(typed, elapsed):
     assert elapsed > 0, 'Elapsed time must be positive'
     # BEGIN PROBLEM 4
     "*** YOUR CODE HERE ***"
+    return len(typed) / 5 * 60 /elapsed
     # END PROBLEM 4
 
 
@@ -75,6 +95,12 @@ def autocorrect(user_word, valid_words, diff_function, limit):
     """
     # BEGIN PROBLEM 5
     "*** YOUR CODE HERE ***"
+    if user_word in valid_words:
+        return user_word
+    legal_words = [word for word in valid_words if diff_function(user_word, word, limit) <= limit]
+    if not legal_words:
+        return user_word
+    return min(legal_words, key = lambda word: diff_function(user_word, word, limit))
     # END PROBLEM 5
 
 
@@ -84,7 +110,16 @@ def shifty_shifts(start, goal, limit):
     their lengths.
     """
     # BEGIN PROBLEM 6
-    assert False, 'Remove this line'
+    # assert False, 'Remove this line'
+    if limit < 0:
+        return 1
+    if not start:
+        return len(goal)
+    if not goal:
+        return len(start)
+    if start[0] != goal[0]:
+        return 1 + shifty_shifts(start[1:], goal[1:], limit-1)
+    return shifty_shifts(start[1:], goal[1:], limit)
     # END PROBLEM 6
 
 
