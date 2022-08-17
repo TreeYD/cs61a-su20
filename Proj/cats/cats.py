@@ -93,14 +93,22 @@ def autocorrect(user_word, valid_words, diff_function, limit):
     from USER_WORD. Instead returns USER_WORD if that difference is greater
     than LIMIT.
     """
+    """Returns the element of VALID_WORDS that has the smallest difference
+    from USER_WORD. Instead returns USER_WORD if that difference is greater
+    than LIMIT.
+    """
     # BEGIN PROBLEM 5
     "*** YOUR CODE HERE ***"
     if user_word in valid_words:
         return user_word
-    legal_words = [word for word in valid_words if diff_function(user_word, word, limit) <= limit]
-    if not legal_words:
-        return user_word
-    return min(legal_words, key = lambda word: diff_function(user_word, word, limit))
+    min_word, min_diff = user_word, limit + 1
+    for word in valid_words:
+        diff = diff_function(user_word, word, limit)
+        if diff <= limit:
+            if diff < min_diff:
+                min_diff, min_word = diff, word
+    return min_word
+
     # END PROBLEM 5
 
 
@@ -125,24 +133,31 @@ def shifty_shifts(start, goal, limit):
 
 def meowstake_matches(start, goal, limit):
     """A diff function that computes the edit distance from START to GOAL."""
-    assert False, 'Remove this line'
+    # assert False, 'Remove this line'
 
-    if ______________: # Fill in the condition
+    if limit == 0 or not start or not goal: # Fill in the condition
         # BEGIN
         "*** YOUR CODE HERE ***"
+        if not limit:
+            return start != goal
+        if not start:
+            return len(goal)
+        return len(start)
         # END
 
-    elif ___________: # Feel free to remove or add additional cases
+    elif start[0] == goal[0]: # Feel free to remove or add additional cases
         # BEGIN
         "*** YOUR CODE HERE ***"
+        return meowstake_matches(start[1:], goal[1:], limit)
         # END
 
     else:
-        add_diff = ...  # Fill in these lines
-        remove_diff = ... 
-        substitute_diff = ... 
-        # BEGIN
+         # BEGIN
         "*** YOUR CODE HERE ***"
+        add_diff = meowstake_matches(start, goal[1:], limit - 1)  # Fill in these lines
+        remove_diff =  meowstake_matches(start[1:], goal, limit - 1) 
+        substitute_diff = meowstake_matches(start[1:], goal[1:], limit - 1)
+        return 1 + min(add_diff, remove_diff, substitute_diff)
         # END
 
 
@@ -160,6 +175,16 @@ def report_progress(typed, prompt, id, send):
     """Send a report of your id and progress so far to the multiplayer server."""
     # BEGIN PROBLEM 8
     "*** YOUR CODE HERE ***"
+    correct = 0
+    whole = len(prompt)
+    while correct < len(typed):
+        if typed[correct] != prompt[correct]:
+            break 
+        correct += 1
+    progress = correct / whole
+    message = {"id": id, "progress": progress}
+    send(message)
+    print(progress)
     # END PROBLEM 8
 
 
@@ -186,6 +211,8 @@ def time_per_word(times_per_player, words):
     """
     # BEGIN PROBLEM 9
     "*** YOUR CODE HERE ***"
+    times = [[times_per_player[i][j] - times_per_player[i][j-1] for j in range(1, len(words) + 1)] for i in range(0, len(times_per_player))]
+    return game(words, times)
     # END PROBLEM 9
 
 
@@ -201,6 +228,14 @@ def fastest_words(game):
     words = range(len(all_words(game)))    # An index for each word
     # BEGIN PROBLEM 10
     "*** YOUR CODE HERE ***"
+    rank = [[] for player in players]
+    for word_index in words:
+        fastest_player_num = 0
+        for player_num in players:
+            if time(game, player_num, word_index) < time(game, fastest_player_num, word_index):
+                fastest_player_num = player_num
+        rank[fastest_player_num] += [word_at(game, word_index)]
+    return rank
     # END PROBLEM 10
 
 
@@ -256,6 +291,27 @@ def key_distance_diff(start, goal, limit):
 
     # BEGIN PROBLEM EC1
     "*** YOUR CODE HERE ***"
+    if limit <= 0 or not start or not goal: # Fill in the condition
+        if limit <= 0:
+            return 0 if start == goal else float("inf")
+        if not start:
+            return len(goal)
+        return len(start)
+    elif start[0] == goal[0]: # Feel free to remove or add additional cases
+        return key_distance_diff(start[1:], goal[1:], limit)
+    else:
+        if limit == 1 and start != goal[1:]:
+            add_diff = float("inf")
+        else:
+            add_diff = 1 + key_distance_diff(start, goal[1:], limit - 1)  # Fill in these lines
+        if limit == 1 and start[1:] != goal:
+            remove_diff = float("inf")
+        else:    
+            remove_diff =  1 + key_distance_diff(start[1:], goal, limit - 1) 
+        cost = key_distance[start[0], goal[0]]
+        substitute_diff = cost + key_distance_diff(start[1:], goal[1:], limit - cost)
+        return min(add_diff, remove_diff, substitute_diff)
+        
     # END PROBLEM EC1
 
 def memo(f):
@@ -268,14 +324,36 @@ def memo(f):
         return cache[args]
     return memoized
 
+key_distance_diff = memo(key_distance_diff)
 key_distance_diff = count(key_distance_diff)
-
+diff_memo = {}
+func_memo = {} 
+# there is a sample that repeatly tests one diff_function 
+# so we should memorize this function and every time it is 
+# we should use its memo version, so func_memo is used for this
 
 def faster_autocorrect(user_word, valid_words, diff_function, limit):
     """A memoized version of the autocorrect function implemented above."""
 
     # BEGIN PROBLEM EC2
     "*** YOUR CODE HERE ***"
+    if user_word in valid_words:
+        return user_word
+    if diff_function not in func_memo:
+        func_memo[diff_function] = memo(diff_function)
+    diff_function = func_memo[diff_function]
+    if (user_word,diff_function) in diff_memo:
+        return diff_memo[(user_word, diff_function)]
+    min_word = user_word
+    min_diff = float("inf")
+    for word in valid_words:
+        diff = diff_function(user_word, word, limit)
+        if diff <= limit:
+            if diff < min_diff:
+                min_word, min_diff = word, diff
+    if min_word != user_word:
+        diff_memo[(user_word, diff_function)] = min_word
+    return min_word
     # END PROBLEM EC2
 
 
