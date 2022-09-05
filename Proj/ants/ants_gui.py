@@ -139,7 +139,7 @@ class AntsGUI:
             def on_click(gamestate, frame, name=name):
                 ant_type = self.ant_type_selected
                 existing_ant = gamestate.places[name].ant
-                if ant_type is 'Remover':
+                if ant_type == 'Remover':
                     if existing_ant is not None:
                         print("gamestate.remove_ant('{0}')".format(name))
                         gamestate.remove_ant(name)
